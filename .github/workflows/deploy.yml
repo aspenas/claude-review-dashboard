@@ -31,9 +31,9 @@ jobs:
         id: secrets
         run: |
           # Fetch all required secrets
-          GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id anthropic/GITHUB_TOKEN --query SecretString --output text)
-          ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id anthropic/api-key --query SecretString --output text)
-          NETLIFY_AUTH_TOKEN=$(aws secretsmanager get-secret-value --secret-id candlefish-ai/netlify/auth-token --query SecretString --output text)
+          GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id github-token --query SecretString --output text)
+          ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id candlefish-ai/anthropic/api-key --query SecretString --output text)
+          NETLIFY_AUTH_TOKEN=$(aws secretsmanager get-secret-value --secret-id netlify-api-token --query SecretString --output text)
           
           # Set as outputs (masked)
           echo "::add-mask::$GITHUB_TOKEN"
@@ -97,7 +97,7 @@ jobs:
       - name: Get Anthropic API key
         id: get-api-key
         run: |
-          API_KEY=$(aws secretsmanager get-secret-value --secret-id anthropic/api-key --query SecretString --output text)
+          API_KEY=$(aws secretsmanager get-secret-value --secret-id candlefish-ai/anthropic/api-key --query SecretString --output text)
           echo "::add-mask::$API_KEY"
           echo "api-key=$API_KEY" >> $GITHUB_OUTPUT
 
