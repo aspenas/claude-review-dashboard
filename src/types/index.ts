@@ -50,4 +50,9 @@ export interface OrganizationSettings {
     weekly: number
     monthly: number
   }
+  alert_threshold_percentage: number
+  alert_enabled: boolean
+  alert_emails: string[]
+  slack_webhook_url?: string
+  authorized_users: string[]
 }

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSpring, animated } from '@react-spring/web'
-import { GitBranch, Clock, DollarSign, TrendingUp } from 'lucide-react'
+import { GitBranch, Clock, TrendingUp } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 import { Repository } from '@/types'

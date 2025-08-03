@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSpring, animated } from '@react-spring/web'
-import { Save, Bell, DollarSign, Mail, Slack, AlertCircle } from 'lucide-react'
+import { Save, Bell, DollarSign, Slack, AlertCircle } from 'lucide-react'
 import { api } from '@/lib/api'
 import { OrganizationSettings } from '@/types'
 
