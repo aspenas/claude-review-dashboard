@@ -1,0 +1,111 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Get secrets from AWS Secrets Manager
+        id: secrets
+        run: |
+          # Fetch all required secrets
+          GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id anthropic/GITHUB_TOKEN --query SecretString --output text)
+          ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id anthropic/api-key --query SecretString --output text)
+          NETLIFY_AUTH_TOKEN=$(aws secretsmanager get-secret-value --secret-id candlefish-ai/netlify/auth-token --query SecretString --output text)
+          
+          # Set as outputs (masked)
+          echo "::add-mask::$GITHUB_TOKEN"
+          echo "::add-mask::$ANTHROPIC_API_KEY"
+          echo "::add-mask::$NETLIFY_AUTH_TOKEN"
+          
+          echo "github-token=$GITHUB_TOKEN" >> $GITHUB_OUTPUT
+          echo "anthropic-api-key=$ANTHROPIC_API_KEY" >> $GITHUB_OUTPUT
+          echo "netlify-auth-token=$NETLIFY_AUTH_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_API_ENDPOINT: /.netlify/functions
+          VITE_AWS_REGION: us-east-1
+
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ steps.secrets.outputs.netlify-auth-token }}
+          NETLIFY_SITE_ID: beamish-froyo-ed37ee
+        run: |
+          # Deploy with functions
+          netlify deploy --prod --dir=dist --functions=netlify/functions
+          
+          # Set environment variables
+          netlify env:set MY_AWS_ACCESS_KEY_ID "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          netlify env:set MY_AWS_SECRET_ACCESS_KEY "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          netlify env:set MY_AWS_REGION "us-east-1"
+          netlify env:set GITHUB_CLIENT_ID "$(aws secretsmanager get-secret-value --secret-id candlefish-ai/github/oauth/client-id --query SecretString --output text)"
+          netlify env:set GITHUB_CLIENT_SECRET "$(aws secretsmanager get-secret-value --secret-id candlefish-ai/github/oauth/client-secret --query SecretString --output text)"
+          netlify env:set ANTHROPIC_API_KEY "${{ steps.secrets.outputs.anthropic-api-key }}"
+          netlify env:set NODE_ENV "production"
+
+      - name: Verify deployment
+        run: |
+          echo "Deployment complete!"
+          echo "Site URL: https://beamish-froyo-ed37ee.netlify.app"
+          
+          # Test the API endpoint
+          curl -s https://beamish-froyo-ed37ee.netlify.app/.netlify/functions/health || echo "Health check endpoint not yet available"
+
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Get Anthropic API key
+        id: get-api-key
+        run: |
+          API_KEY=$(aws secretsmanager get-secret-value --secret-id anthropic/api-key --query SecretString --output text)
+          echo "::add-mask::$API_KEY"
+          echo "api-key=$API_KEY" >> $GITHUB_OUTPUT
+
+      - name: Claude PR Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic-api-key: ${{ steps.get-api-key.outputs.api-key }}
+          model: claude-opus-4-20250514
+          max-tokens: 32000
+          review-type: comprehensive
+          github-token: ${{ secrets.GITHUB_TOKEN }}
