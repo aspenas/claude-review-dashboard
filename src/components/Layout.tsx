@@ -6,8 +6,7 @@ import {
   DollarSign, 
   Settings,
   Brain,
-  TrendingUp,
-  AlertCircle
+  TrendingUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

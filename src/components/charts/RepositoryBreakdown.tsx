@@ -67,8 +67,8 @@ export default function RepositoryBreakdown({ data }: RepositoryBreakdownProps) 
             
             return labels.map((label, i) => ({
               text: label,
-              fillStyle: datasets[0].backgroundColor?.[i] as string,
-              strokeStyle: datasets[0].borderColor?.[i] as string,
+              fillStyle: (datasets[0].backgroundColor as string[])?.[i] || '',
+              strokeStyle: (datasets[0].borderColor as string[])?.[i] || '',
               lineWidth: 2,
               hidden: false,
               index: i
