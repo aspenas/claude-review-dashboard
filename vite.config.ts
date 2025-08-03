@@ -26,7 +26,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'spring-vendor': ['@react-spring/web', '@react-spring/three'],
+          'spring-vendor': ['@react-spring/web'],
           'chart-vendor': ['chart.js', 'react-chartjs-2', 'recharts'],
           'aws-vendor': ['aws-amplify']
         }
