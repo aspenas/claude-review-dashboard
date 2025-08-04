@@ -33,7 +33,7 @@ jobs:
           # Fetch all required secrets
           GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id github-token --query SecretString --output text)
           ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id candlefish-ai/anthropic/api-key --query SecretString --output text)
-          NETLIFY_AUTH_TOKEN=$(aws secretsmanager get-secret-value --secret-id netlify-api-token --query SecretString --output text)
+          NETLIFY_AUTH_TOKEN=$(aws secretsmanager get-secret-value --secret-id netlify-api-token --query SecretString --output text | jq -r '.token')
           
           # Set as outputs (masked)
           echo "::add-mask::$GITHUB_TOKEN"
@@ -59,7 +59,7 @@ jobs:
       - name: Deploy to Netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ steps.secrets.outputs.netlify-auth-token }}
-          NETLIFY_SITE_ID: beamish-froyo-ed37ee
+          NETLIFY_SITE_ID: c3f08900-230a-4a82-a58b-a5f7174e5582
         run: |
           # Deploy with functions
           netlify deploy --prod --dir=dist --functions=netlify/functions
