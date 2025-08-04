@@ -38,9 +38,9 @@ const historicalData = [
   { repository: 'infrastructure', date: '2025-01-17', cost: 134.80, reviews: 10, model: 'claude-opus-4-20250514' },
 ];
 
-async function createReviewRecord(data) {
+async function createReviewRecord(data, index) {
   const timestamp = new Date(`${data.date}T12:00:00Z`).toISOString();
-  const reviewId = `rev_${data.repository}_${Date.parse(timestamp)}`;
+  const reviewId = `rev_${data.repository}_${Date.parse(timestamp)}_${index}`;
   
   // Calculate token usage based on cost
   // Cost = (input_tokens * 0.015 + output_tokens * 0.075) / 1000
@@ -82,9 +82,10 @@ async function importData() {
     
     // Convert historical data to review records
     const reviews = [];
+    let reviewIndex = 0;
     for (const data of historicalData) {
       for (let i = 0; i < data.reviews; i++) {
-        reviews.push(await createReviewRecord(data));
+        reviews.push(await createReviewRecord(data, reviewIndex++));
       }
     }
     
